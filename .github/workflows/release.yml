@@ -1,0 +1,62 @@
+name: Release
+
+# Pushing a v* tag builds the extension for each platform and attaches the binaries to the
+# tag's release, at the URLs kiwi.json lists.
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-latest,    rid: linux-x64,   file: libzest_native_test-linux-x64.so }
+          - { os: ubuntu-24.04-arm, rid: linux-arm64, file: libzest_native_test-linux-arm64.so }
+          - { os: macos-latest,     rid: osx-x64,     file: libzest_native_test-osx-x64.dylib,   arch: x86_64 }
+          - { os: macos-latest,     rid: osx-arm64,   file: libzest_native_test-osx-arm64.dylib, arch: arm64 }
+          - { os: windows-latest,   rid: win-x64,     file: zest_native_test-win-x64.dll }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      shell: bash
+      run: |
+        flags=(-shared -O2 -I src -DZNT_RID="\"${{ matrix.rid }}\"")
+        case "${{ matrix.rid }}" in
+          osx-*) flags+=(-fPIC -arch "${{ matrix.arch }}") ;;
+          linux-*) flags+=(-fPIC) ;;
+          win-*) flags+=(-static-libgcc) ;;
+        esac
+        mkdir -p out
+        gcc "${flags[@]}" src/zest_native_test.c -o "out/${{ matrix.file }}" 2>/dev/null \
+          || cc "${flags[@]}" src/zest_native_test.c -o "out/${{ matrix.file }}"
+        file "out/${{ matrix.file }}" || true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.rid }}
+        path: out/${{ matrix.file }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        path: out
+        merge-multiple: true
+    - name: Create the release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        cd out
+        sha256sum * > SHA256SUMS
+        gh release create "$GITHUB_REF_NAME" * --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" \
+          --notes "Native binaries for $GITHUB_REF_NAME, built by the Release workflow."

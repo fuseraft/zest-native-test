@@ -1,0 +1,17 @@
+/#
+@summary Test package for zest: Kiwi functions built on a native extension.
+The extension registers add, mul and platform in this same package.
+#/
+package zest_native_test
+  /#
+  @summary Returns a * a + b * b, computed by the native extension.
+  @param integer a : First operand.
+  @param integer b : Second operand.
+  @return integer : The sum of the squares.
+  #/
+  fn sum_squares(a: integer, b: integer): integer
+    zest_native_test::add(zest_native_test::mul(a, a), zest_native_test::mul(b, b))
+  end
+end
+
+export "zest_native_test"

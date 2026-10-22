@@ -1,0 +1,19 @@
+{
+  "name": "zest-native-test",
+  "version": "0.1.0",
+  "description": "Test package for zest's native extension support.",
+  "main": "zest_native_test.kiwi",
+  "kiwi": ">=1.6.2",
+  "dependencies": {},
+  "dev_dependencies": {},
+  "native": {
+    "name": "zest_native_test",
+    "binaries": {
+      "linux-x64": { "url": "https://github.com/fuseraft/zest-native-test/releases/download/v{version}/libzest_native_test-linux-x64.so" },
+      "linux-arm64": { "url": "https://github.com/fuseraft/zest-native-test/releases/download/v{version}/libzest_native_test-linux-arm64.so" },
+      "osx-x64": { "url": "https://github.com/fuseraft/zest-native-test/releases/download/v{version}/libzest_native_test-osx-x64.dylib" },
+      "osx-arm64": { "url": "https://github.com/fuseraft/zest-native-test/releases/download/v{version}/libzest_native_test-osx-arm64.dylib" },
+      "win-x64": { "url": "https://github.com/fuseraft/zest-native-test/releases/download/v{version}/zest_native_test-win-x64.dll" }
+    }
+  }
+}
